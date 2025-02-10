@@ -3,11 +3,7 @@ package com.james.crashhunter.core
 import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Handler
-import com.james.crashhunter.activityLifecycle.ExceptionLifeCycleCallback
-import com.james.crashhunter.activityLifecycle.ExceptionLifeCycleCallback.FOREGROUND
-import com.james.crashhunter.activityLifecycle.ExceptionLifeCycleCallback.OnAppForegroundStateChangeListener
 import com.james.crashhunter.ext.logd
-import com.james.crashhunter.ext.logi
 import com.james.crashhunter.activityapi.ActivityKiller
 import com.james.crashhunter.activityapi.ActivityKillerV15_V20
 import com.james.crashhunter.activityapi.ActivityKillerV21_V23
@@ -17,18 +13,21 @@ import com.james.crashhunter.activityapi.ActivityKillerV28_
 import com.james.crashhunter.interceptor.CaptureData
 import me.weishu.reflection.Reflection
 
-object ExceptionCaptureHelper : OnAppForegroundStateChangeListener {
+object ExceptionCaptureHelper {
 
     private var sActivityKiller: ActivityKiller? = null
     private lateinit var config: ExceptionCaptureConfig
-    var isFromBackground = false
+    private var defaultUncaughtExceptionHandler: Thread.UncaughtExceptionHandler? = null
 
     /**
      * Remove Android P reflection restrictions
      */
-    internal fun install(config: ExceptionCaptureConfig) {
+    internal fun install(
+        config: ExceptionCaptureConfig,
+        defaultUncaughtExceptionHandler: Thread.UncaughtExceptionHandler?
+    ) {
+        this.defaultUncaughtExceptionHandler = defaultUncaughtExceptionHandler
         this.config = config
-        ExceptionLifeCycleCallback.mListeners.add(0, this)
         try {
             config.application?.let { Reflection.unseal(it.baseContext) }
         } catch (throwable: Throwable) {
@@ -93,10 +92,15 @@ object ExceptionCaptureHelper : OnAppForegroundStateChangeListener {
                     try {
                         mhHandler.handleMessage(msg)
                     } catch (throwable: Throwable) {
-                        ExceptionManager.handleException(CaptureData(throwable, Thread.currentThread(), config)) {
-                            sActivityKiller?.finishLaunchActivity(msg)
+                        ExceptionManager.handleException(
+                            CaptureData(throwable, Thread.currentThread(), config), {
+                                sActivityKiller?.finishLaunchActivity(msg)
+                            }) {
+                            defaultUncaughtExceptionHandler?.uncaughtException(
+                                Thread.currentThread(),
+                                throwable
+                            )
                         }
-//                        notifyException(throwable)
                     }
                     return@Callback true
                 }
@@ -107,10 +111,15 @@ object ExceptionCaptureHelper : OnAppForegroundStateChangeListener {
                     try {
                         mhHandler.handleMessage(msg)
                     } catch (throwable: Throwable) {
-                        ExceptionManager.handleException(CaptureData(throwable, Thread.currentThread(), config)) {
-                            sActivityKiller?.finishLaunchActivity(msg)
+                        ExceptionManager.handleException(
+                            CaptureData(throwable, Thread.currentThread(), config), {
+                                sActivityKiller?.finishLaunchActivity(msg)
+                            }) {
+                            defaultUncaughtExceptionHandler?.uncaughtException(
+                                Thread.currentThread(),
+                                throwable
+                            )
                         }
-//                        notifyException(throwable)
                     }
                     return@Callback true
                 }
@@ -120,10 +129,15 @@ object ExceptionCaptureHelper : OnAppForegroundStateChangeListener {
                     try {
                         mhHandler.handleMessage(msg)
                     } catch (throwable: Throwable) {
-                        ExceptionManager.handleException(CaptureData(throwable, Thread.currentThread(), config)) {
-                            sActivityKiller?.finishResumeActivity(msg)
+                        ExceptionManager.handleException(
+                            CaptureData(throwable, Thread.currentThread(), config), {
+                                sActivityKiller?.finishResumeActivity(msg)
+                            }) {
+                            defaultUncaughtExceptionHandler?.uncaughtException(
+                                Thread.currentThread(),
+                                throwable
+                            )
                         }
-//                        notifyException(throwable)
                     }
                     return@Callback true
                 }
@@ -133,10 +147,15 @@ object ExceptionCaptureHelper : OnAppForegroundStateChangeListener {
                     try {
                         mhHandler.handleMessage(msg)
                     } catch (throwable: Throwable) {
-                        ExceptionManager.handleException(CaptureData(throwable, Thread.currentThread(), config)) {
-                            sActivityKiller?.finishPauseActivity(msg)
+                        ExceptionManager.handleException(
+                            CaptureData(throwable, Thread.currentThread(), config), {
+                                sActivityKiller?.finishPauseActivity(msg)
+                            }) {
+                            defaultUncaughtExceptionHandler?.uncaughtException(
+                                Thread.currentThread(),
+                                throwable
+                            )
                         }
-//                        notifyException(throwable)
                     }
                     return@Callback true
                 }
@@ -146,10 +165,15 @@ object ExceptionCaptureHelper : OnAppForegroundStateChangeListener {
                     try {
                         mhHandler.handleMessage(msg)
                     } catch (throwable: Throwable) {
-                        ExceptionManager.handleException(CaptureData(throwable, Thread.currentThread(), config)) {
-                            sActivityKiller?.finishPauseActivity(msg)
+                        ExceptionManager.handleException(
+                            CaptureData(throwable, Thread.currentThread(), config), {
+                                sActivityKiller?.finishPauseActivity(msg)
+                            }) {
+                            defaultUncaughtExceptionHandler?.uncaughtException(
+                                Thread.currentThread(),
+                                throwable
+                            )
                         }
-//                        notifyException(throwable)
                     }
                     return@Callback true
                 }
@@ -159,10 +183,15 @@ object ExceptionCaptureHelper : OnAppForegroundStateChangeListener {
                     try {
                         mhHandler.handleMessage(msg)
                     } catch (throwable: Throwable) {
-                        ExceptionManager.handleException(CaptureData(throwable, Thread.currentThread(), config)) {
-                            sActivityKiller?.finishStopActivity(msg)
+                        ExceptionManager.handleException(
+                            CaptureData(throwable, Thread.currentThread(), config), {
+                                sActivityKiller?.finishStopActivity(msg)
+                            }) {
+                            defaultUncaughtExceptionHandler?.uncaughtException(
+                                Thread.currentThread(),
+                                throwable
+                            )
                         }
-//                        notifyException(throwable)
                     }
                     return@Callback true
                 }
@@ -171,34 +200,12 @@ object ExceptionCaptureHelper : OnAppForegroundStateChangeListener {
                     // Close activity. onStop  onDestroy
                     try {
                         mhHandler.handleMessage(msg)
-                    } catch (throwable: Throwable) {
-//                        notifyException(throwable)
+                    } catch (_: Throwable) {
                     }
                     return@Callback true
                 }
             }
             false
         }
-    }
-
-//    private fun notifyException(e: Throwable) {
-//        config?.run {
-//            if (writeToFile) {
-//                FileUtil.recordException(e, application)
-//            }
-//            logi("CrashHunterHelper: $e isFromBackground: $isFromBackground")
-//            if (isFromBackground) {
-//                this.exceptionStrategy = ExceptionCaptureStrategy.ERROR
-//                listener?.unhandledException(e, Thread.currentThread(), this)
-//            } else {
-//                listener?.handledException(e, Thread.currentThread())
-//            }
-//        }
-//    }
-
-
-    override fun onAppForegroundStateChange(newState: Int) {
-        isFromBackground = (newState == FOREGROUND)
-        logi("ExceptionHelper:  $isFromBackground, newState: $newState")
     }
 }

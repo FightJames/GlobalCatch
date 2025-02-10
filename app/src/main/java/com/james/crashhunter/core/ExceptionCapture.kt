@@ -2,20 +2,18 @@ package com.james.crashhunter.core
 
 import android.os.Handler
 import android.os.Looper
-import com.james.crashhunter.activityLifecycle.ActivityManager
-import com.james.crashhunter.activityLifecycle.ExceptionLifeCycleCallback
+import androidx.annotation.MainThread
 import com.james.crashhunter.ext.logd
-import com.james.crashhunter.pagemanager.PageCrashCounter
 
 object ExceptionCapture {
 
+    @MainThread
     fun init(config: ExceptionCaptureConfig) {
         config.application?.let { application ->
-            ExceptionCaptureHelper.install(config)
-            ExceptionCaptureHandler.init(config)
-            ExceptionLifeCycleCallback.init(application)
-            PageCrashCounter.init(application)
-            ActivityManager.init(config)
+            // In android default system's UncaughtExceptionHandler will handle app crash flow.
+            val defaultUncaughtExceptionHandler = Thread.getDefaultUncaughtExceptionHandler()
+            ExceptionCaptureHelper.install(config, defaultUncaughtExceptionHandler)
+            ExceptionCaptureHandler.init(config, defaultUncaughtExceptionHandler)
             Handler(Looper.getMainLooper()).post {
                 // when service crash, it will do while loop again to get message queue again.
                 while (true) {

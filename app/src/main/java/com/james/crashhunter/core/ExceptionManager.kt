@@ -1,7 +1,5 @@
 package com.james.crashhunter.core
 
-import com.james.crashhunter.activityLifecycle.ActivityManager
-import com.james.crashhunter.ext.logd
 import com.james.crashhunter.interceptor.CaptureData
 import com.james.crashhunter.interceptor.InterceptorManager
 import com.james.crashhunter.interceptor.InterceptorState
@@ -27,9 +25,16 @@ object ExceptionManager {
 
     fun handleException(
         data: CaptureData,
-        finishActivity: () -> Unit
+        exceptionHandled: () -> Unit,
+        cantHandleException: (CaptureData) -> Unit
     ) {
-
-        finishActivity()
+        if (handleException(data)) {
+            exceptionHandled()
+        } else {
+            if (data.config.writeToFile) {
+                FileUtil.recordException(data.e, data.config.application)
+            }
+            cantHandleException(data)
+        }
     }
 }

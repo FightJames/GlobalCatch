@@ -25,7 +25,7 @@ class MyApp : Application() {
             .addInterceptor(object : Interceptor() {
                 override fun process(data: CaptureData): InterceptorState {
                     Log.d("Exception ", data.e.toString())
-                    return InterceptorState.NO
+                    return InterceptorState.YES
                 }
             }).build()
         ExceptionCapture.init(config)

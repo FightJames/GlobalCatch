@@ -8,10 +8,9 @@ object ExceptionCaptureHandler : Thread.UncaughtExceptionHandler {
     private var mDefaultHandler: Thread.UncaughtExceptionHandler? = null
     private lateinit var config: ExceptionCaptureConfig
 
-    fun init(config: ExceptionCaptureConfig) {
+    fun init(config: ExceptionCaptureConfig, defaultHandler: Thread.UncaughtExceptionHandler? = null) {
         ExceptionCaptureHandler.config = config;
-        // get the default UncaughtExceptionHandler of system
-        mDefaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+        mDefaultHandler = defaultHandler ?: Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler(this)
     }
 
