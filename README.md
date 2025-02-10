@@ -4,21 +4,20 @@ This library will caught all exception from app main thread. It can prevent app 
 But some cases, you need to let app crash.
 
 ## Use
-```
+```kotlin
 class MyApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        val config = ExceptionCaptureConfig.Builder()
+                val config = ExceptionCatcherConfig.Builder()
             .application(this)
             .setExceptionStrategy(ExceptionCaptureStrategy.CATCH)
             .addInterceptor(object : Interceptor() {
                 override fun process(data: CaptureData): InterceptorState {
-                    Log.d("Exception ", data.e.toString())
-                    return InterceptorState.NO
+                    return InterceptorState.YES
                 }
             }).build()
-        ExceptionCapture.init(config)
+        ExceptionCatcher.init(config)
     }
 }
 ```
@@ -28,7 +27,7 @@ CATCH : Catch all exception before system handle it.
 NOT_CATCH : Don't catch exceptions, just make app crash.
 
 ### Interceptor
-```
+```kotlin
 class SampleInterceptor : Interceptor() {
     
     override fun process(data: CaptureData): InterceptorState {
@@ -40,7 +39,7 @@ Before system handle the exception, the exception will pass to interceptor to ha
 When the interceptor's process method return InterceptorState.YES which mean the exception was handled, it will not be threw to system. vis versa.
 
 Here is CaptureData format
-```
+```kotlin
 data class CaptureData(
     val e: Throwable,
     val thread: Thread,
@@ -48,24 +47,24 @@ data class CaptureData(
 )
 ```
 
-## ExceptionListener
-Theoretically, handledException will be called after the exception handled by interceptors.
-Here is edge case for ExceptionListener.
-If the exception is threw at onStart(), the exception will be handled and call ExceptionListener's handledException. But the exception not pass to interceptors.
-And close current activity.
-```
-interface ExceptionListener {
-
-    // The throwable was handled by interceptor.
-    fun handledException(throwable: Throwable, thread: Thread)
-
-    // The throwable can't be handled by interceptors.
-    fun unhandledException(throwable: Throwable, thread: Thread, config: ExceptionCaptureConfig)
-}
-```
-
 ## Error data file
 The error data will store at SDCard/Android/data/<application package>/cache, data/data/<application package>/cache.
 You can find the data here.
 
+## Leak case
+If there is any crash from service, it will catch exception. But the service was already crash, so it will trigger ANR.
 
+```kotlin
+class CrashService : Service() {
+
+    override fun onBind(intent: Intent): IBinder? {
+        return null
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        throw Exception("Crash Service")
+        return super.onStartCommand(intent, flags, startId)
+    }
+}
+
+```

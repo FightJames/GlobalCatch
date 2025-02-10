@@ -12,12 +12,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.james.crashhunter.service.CrashService
 import com.james.crashhunter.ui.theme.CrashHunterTheme
 
 class MainActivity : ComponentActivity() {
@@ -33,6 +36,16 @@ class MainActivity : ComponentActivity() {
                             Intent(this, CrashActivity::class.java).also {
                                 startActivity(it)
                             }
+                        },
+                        {
+                            Intent(this, ClickCrashActivity::class.java).also {
+                                startActivity(it)
+                            }
+                        },
+                        {
+                            Intent(this, CrashService::class.java).also {
+                                startService(it)
+                            }
                         }
                     )
                 }
@@ -44,26 +57,39 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Greeting2(
     modifier: Modifier = Modifier,
-    onClick: () -> Unit
+    gotoCrashActivity: () -> Unit,
+    gotoClickCrashActivity: () -> Unit,
+    gotoServiceCrashActivity: () -> Unit
 ) {
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(
             modifier = Modifier
                 .wrapContentHeight()
                 .width(IntrinsicSize.Max)
         ) {
-            Button(onClick = onClick) {
+            Button(onClick = gotoCrashActivity) {
                 Text(
                     text = "go to CrashActivity",
-                    modifier = modifier
+                    modifier = Modifier.wrapContentSize()
                 )
             }
 
-        }
+            Button(onClick = gotoClickCrashActivity) {
+                Text(
+                    text = "go to ClickCrashActivity",
+                    modifier = Modifier.wrapContentSize()
+                )
+            }
 
+            Button(onClick = gotoServiceCrashActivity) {
+                Text(
+                    text = "start crash service",
+                    modifier = Modifier.wrapContentSize()
+                )
+            }
+        }
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable

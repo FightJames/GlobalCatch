@@ -13,6 +13,16 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.CrashHunter"
         tools:targetApi="31">
+        <service
+            android:name=".service.CrashService"
+            android:enabled="true"
+            android:exported="true"></service>
+
+        <activity
+            android:name=".ClickCrashActivity"
+            android:exported="false"
+            android:label="@string/title_activity_click_crash"
+            android:theme="@style/Theme.CrashHunter" />
         <activity
             android:name=".CrashActivity"
             android:exported="false"

@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">crashHunter</string>
     <string name="title_activity_crash">CrashActivity</string>
+    <string name="title_activity_click_crash">ClickCrashActivity</string>
 </resources>

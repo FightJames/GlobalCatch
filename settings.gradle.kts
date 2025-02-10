@@ -22,4 +22,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "crashHunter"
 include(":app")
- 
+include(":catcher")
