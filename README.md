@@ -52,7 +52,7 @@ The error data will store at SDCard/Android/data/<application package>/cache, da
 You can find the data here.
 
 ## Leak case
-If there is any crash from service, it will catch exception. But the service was already crash, so it will trigger ANR.
+If there is any crash from service, it won't catch exception. Just let app crash.
 
 ```kotlin
 class CrashService : Service() {

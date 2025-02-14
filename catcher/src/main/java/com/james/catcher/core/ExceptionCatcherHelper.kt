@@ -18,6 +18,19 @@ object ExceptionCatcherHelper {
     private var sActivityKiller: ActivityKiller? = null
     private lateinit var config: ExceptionCatcherConfig
     private var defaultUncaughtExceptionHandler: Thread.UncaughtExceptionHandler? = null
+    const val LAUNCH_ACTIVITY = 100
+    const val PAUSE_ACTIVITY = 101
+    const val PAUSE_ACTIVITY_FINISHING = 102
+    const val STOP_ACTIVITY_HIDE = 104
+    const val RESUME_ACTIVITY = 107
+    const val DESTROY_ACTIVITY = 109
+    const val NEW_INTENT = 112
+    const val RELAUNCH_ACTIVITY = 126
+    const val CREATE_SERVICE = 114
+    const val SERVICE_ARGS = 115
+    const val STOP_SERVICE = 116
+    const val BIND_SERVICE = 121
+    const val UNBIND_SERVICE = 122
 
     /**
      * Remove Android P reflection restrictions
@@ -67,14 +80,6 @@ object ExceptionCatcherHelper {
     @SuppressLint("PrivateApi", "DiscouragedPrivateApi")
     @Throws(Exception::class)
     private fun hookmH() {
-        val LAUNCH_ACTIVITY = 100
-        val PAUSE_ACTIVITY = 101
-        val PAUSE_ACTIVITY_FINISHING = 102
-        val STOP_ACTIVITY_HIDE = 104
-        val RESUME_ACTIVITY = 107
-        val DESTROY_ACTIVITY = 109
-        val NEW_INTENT = 112
-        val RELAUNCH_ACTIVITY = 126
         val activityThreadClass = Class.forName("android.app.ActivityThread")
         val activityThread =
             activityThreadClass.getDeclaredMethod("currentActivityThread").invoke(null)
@@ -84,7 +89,26 @@ object ExceptionCatcherHelper {
         val callbackField = Handler::class.java.getDeclaredField("mCallback")
         callbackField.isAccessible = true
         callbackField[mhHandler] = Handler.Callback { msg ->
-            logd(" receiveEvent " + msg.what.toString())
+
+            // Service part
+            when (msg.what) {
+                CREATE_SERVICE,
+                SERVICE_ARGS,
+                STOP_SERVICE,
+                BIND_SERVICE,
+                UNBIND_SERVICE -> {
+                    try {
+                        mhHandler.handleMessage(msg)
+                    } catch (t: Throwable) {
+                        defaultUncaughtExceptionHandler?.uncaughtException(
+                            Thread.currentThread(),
+                            t
+                        )
+                    }
+                }
+            }
+
+
             if (Build.VERSION.SDK_INT >= 28) {
                 // whole android P lifecycle will be here.
                 val EXECUTE_TRANSACTION = 159
